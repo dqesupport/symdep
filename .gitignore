@@ -10,3 +10,6 @@
 /manifest.phar
 /symdep.phar
 /tmp
+
+# ide
+/.idea/
