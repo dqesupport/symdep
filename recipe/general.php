@@ -4,13 +4,7 @@ namespace Deployer;
 
 use Symfony\Component\Console\Input\InputOption;
 use TheRat\SymDep\FileHelper;
-use TheRat\SymDep\Locker;
 use TheRat\SymDep\ReleaseInfo;
-
-/**
- * Default arguments and options.
- */
-option('lock-wait', 'w', InputOption::VALUE_NONE, 'Release lock');
 
 set(
     'bin/node',
@@ -43,7 +37,7 @@ set('symdep_log_enable', false);
 set(
     'symdep_log_dir',
     function () {
-        return dirname(parse('{{deploy_file}}')) . '/var/logs/';
+        return dirname(parse('{{deploy_file}}')).'/var/logs/';
     }
 );
 
@@ -99,44 +93,6 @@ task(
         }
     }
 )->desc('Migrate database');
-task(
-    'deploy:lock',
-    function () {
-        $lockWait = get('lock_wait');
-        $filename = get('lock_filename');
-        $locker = new Locker($filename, get('lock_timeout'));
-        $needLock = true;
-        if ($locker->isLocked()) {
-            if ($lockWait) {
-                writeln($locker->__toString());
-                $needLock = askConfirmation('Force deploy');
-            } else {
-                $needLock = false;
-            }
-        }
-        if ($needLock) {
-            $locker->lock(
-                [
-                    'date' => trim(run('date -u')),
-                    'user' => trim(runLocally('whoami')),
-                    'server' => trim(runLocally('uname -a')),
-                ]
-            );
-            if (isVerbose()) {
-                writeln(sprintf('Create lock file "%s"', $filename));
-            }
-        } else {
-            throw new \RuntimeException('Deploy process locked');
-        }
-    }
-);
-task(
-    'deploy:unlock',
-    function () {
-        $locker = new Locker(get('lock_filename'), get('lock_timeout'));
-        $locker->unlock();
-    }
-);
 
 /**
  * Clear Cache
@@ -198,11 +154,13 @@ task(
 task(
     'release-info-before',
     function () {
-        if (get('release_info') && FileHelper::dirExists(parse('{{deploy_path}}/current'))) {
+        if (get('release_info')
+            && FileHelper::dirExists(parse('{{deploy_path}}/current'))
+        ) {
             ReleaseInfo::getInstance()->run();
         }
     }
-)->desc('Release info');
+)->once()->desc('Release info');
 
 task(
     'release-info-after',
@@ -211,9 +169,7 @@ task(
             ReleaseInfo::getInstance()->showIssues();
         }
     }
-)->desc('Release info');
-
-// -------------
+)->once()->desc('Release info');
 
 task(
     'deploy',
@@ -236,9 +192,9 @@ task(
         'deploy:assets:install',
         'deploy:assetic:dump',
         'deploy:cache:clear',
+        'deploy:cache:warmup',
         'database:cache-clear',
         'database:migrate',
-        'deploy:cache:warmup',
         'configure-after',
         'link-before',
         'deploy:symlink',
@@ -248,3 +204,8 @@ task(
         'release-info-after',
     ]
 )->desc('Run deploy project, depend on --build-type=<[d]ev|[t]est|[p]rod>');
+
+task('unlock', [
+    'properties',
+    'deploy:unlock',
+]);
