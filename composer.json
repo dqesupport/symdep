@@ -3,7 +3,7 @@
     "description": "Additional tool for symfony deploy",
     "require": {
         "php": ">=7.1",
-        "deployer/deployer": "dev-symfony4 as 6.7.0-dev",
+        "deployer/deployer": "dev-symfony4 as 6.8.0-dev",
         "deployer/phar-update": "^2.0",
         "symfony/console": "^3.4|^4.0",
         "symfony/finder": "^3.4|^4.0",
