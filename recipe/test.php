@@ -80,6 +80,17 @@ task('deploy:prepare', function () {
 });
 
 task(
+    'deploy:lock',
+    function () {
+    }
+);
+task(
+    'deploy:unlock',
+    function () {
+    }
+);
+
+task(
     'test:prepare',
     function () {
         run('if [ ! -d {{deploy_path}} ]; then mkdir -p {{deploy_path}}; fi');
@@ -171,3 +182,33 @@ task(
     }
 );
 
+task('deploy:update_code', function () {
+    $repository = get('repository');
+    $branch = get('branch');
+    $git = get('bin/git');
+
+    $bare = parse('{{deploy_path}}/.dep/repo');
+    start:
+    // Clone the repository to a bare repo.
+    run("[ -d $bare ] || mkdir -p $bare");
+    run("[ -f $bare/HEAD ] || $git clone --mirror $repository $bare 2>&1");
+
+    cd($bare);
+
+    // If remote url changed, drop `.dep/repo` and reinstall.
+    if (run("$git config --get remote.origin.url") !== $repository) {
+        cd('{{deploy_path}}');
+        run("rm -rf $bare");
+        goto start;
+    }
+
+    run("$git remote update 2>&1");
+    // Copy to release_path.
+    cd('{{release_path}}');
+    run("$git clone -l $bare .");
+    run("$git checkout --force $branch");
+
+    // Save git revision in REVISION file.
+    $rev = escapeshellarg(run("$git rev-list $branch -1"));
+    run("echo $rev > {{release_path}}/REVISION");
+});
