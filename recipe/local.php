@@ -91,16 +91,6 @@ task(
     }
 );
 task(
-    'deploy:lock',
-    function () {
-    }
-);
-task(
-    'deploy:unlock',
-    function () {
-    }
-);
-task(
     'cleanup',
     function () {
     }

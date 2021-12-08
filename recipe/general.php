@@ -209,3 +209,13 @@ task('unlock', [
     'properties',
     'deploy:unlock',
 ]);
+task(
+    'deploy:lock',
+    function () {
+    }
+);
+task(
+    'deploy:unlock',
+    function () {
+    }
+);

@@ -80,17 +80,6 @@ task('deploy:prepare', function () {
 });
 
 task(
-    'deploy:lock',
-    function () {
-    }
-);
-task(
-    'deploy:unlock',
-    function () {
-    }
-);
-
-task(
     'test:prepare',
     function () {
         run('if [ ! -d {{deploy_path}} ]; then mkdir -p {{deploy_path}}; fi');

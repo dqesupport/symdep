@@ -38,9 +38,7 @@
         "bin/symdep",
         "bin/project-update",
         "bin/symdep-project-deploy-on-test",
-        "bin/symdep-project-deploy-on-test-unlock",
         "bin/symdep-project-deploy-on-prod",
-        "bin/symdep-project-deploy-on-prod-unlock",
         "bin/project-drop-branches-from-test"
     ]
 }
