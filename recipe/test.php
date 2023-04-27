@@ -182,7 +182,7 @@ task('deploy:update_code', function () {
     run("[ -d $bare ] || mkdir -p $bare");
     run("[ -f $bare/HEAD ] || $git clone --mirror $repository $bare 2>&1");
 
-    cd($bare);
+    cd("$bare && git fetch && git fetch -p");
 
     // If remote url changed, drop `.dep/repo` and reinstall.
     if (run("$git config --get remote.origin.url") !== $repository) {
@@ -195,6 +195,7 @@ task('deploy:update_code', function () {
     // Copy to release_path.
     cd('{{release_path}}');
     run("$git clone -l $bare .");
+    run("$git remote set-url origin $repository");
     run("$git checkout --force $branch");
 
     // Save git revision in REVISION file.
