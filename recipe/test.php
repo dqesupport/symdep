@@ -180,9 +180,10 @@ task('deploy:update_code', function () {
     start:
     // Clone the repository to a bare repo.
     run("[ -d $bare ] || mkdir -p $bare");
-    run("[ -f $bare/HEAD ] || $git clone --mirror $repository $bare 2>&1");
+    run("[ -f $bare/HEAD ] || $git clone --mirror $repository $bare 2>&1", ['timeout' => 600]);
 
-    cd("$bare && git fetch && git fetch -p");
+    cd("$bare");
+    run('git fetch && git fetch -p');
 
     // If remote url changed, drop `.dep/repo` and reinstall.
     if (run("$git config --get remote.origin.url") !== $repository) {
