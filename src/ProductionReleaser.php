@@ -128,8 +128,18 @@ class ProductionReleaser
             $forDelete = array_slice($releasesBranches, 0, -2 * (int)$keepReleases);
             if ($forDelete) {
                 runLocally('{{bin/git}} push origin --delete '.implode(' ', $forDelete));
+            }
+
+            $forDeleteLocal = array_filter(
+                $forDelete,
+                function ($branch) {
+                    $isExistLocalBranch = runLocally(sprintf('{{bin/git}} branch | grep -w %s || true', $branch));
+                    return (bool)trim($isExistLocalBranch);
+                }
+            );
+            if ($forDeleteLocal) {
                 try {
-                    runLocally('{{bin/git}} branch -D '.implode(' ', $forDelete));
+                    runLocally('{{bin/git}} branch -D '.implode(' ', $forDeleteLocal));
                 } catch (\Exception $e) {
                     !isVerbose() ?: writeln($e->getMessage());
                 }
