@@ -71,13 +71,7 @@ class FileHelper
         }
 
         $content = run(sprintf('cat "%s"', $srcFilename));
-        $content = parse($content);
-        $command = <<<DOCHERE
-cat > "$dstFilename" <<'_EOF'
-$content
-_EOF
-DOCHERE;
-        run($command);
+        file_put_contents($dstFilename, parse($content));
 
         if (is_null($mode)) {
             try {
