@@ -62,20 +62,20 @@ class BuildType
      * --long-param <value>
      * <value>
      *
-     * @param array $noopt List of parameters without values
+     * @param array $noOpt List of parameters without values
      * @return array
      */
-    protected function parseParameters($noOpt = [])
+    protected function parseParameters(array $noOpt = []): array
     {
         $result = [];
         $params = $_SERVER['argv'];
         reset($params);
         while ($p = current($params)) {
             next($params);
-            if ($p{0} == '-') {
+            if ($p[0] == '-') {
                 $pName = substr($p, 1);
                 $value = true;
-                if ($pName{0} == '-') {
+                if ($pName[0] == '-') {
                     // long-opt (--<param>)
                     $pName = substr($pName, 1);
                     if (strpos($p, '=') !== false) {
@@ -85,7 +85,7 @@ class BuildType
                 }
                 // check if next parameter is a descriptor or a value
                 $nextParam = current($params);
-                if (!in_array($pName, $noOpt) && $value === true && $nextParam !== false && $nextParam{0} != '-') {
+                if (!in_array($pName, $noOpt) && $value === true && $nextParam !== false && $nextParam[0] != '-') {
                     $value = current($params);
                     next($params);
                 }
