@@ -11,5 +11,5 @@
 /symdep.phar
 /tmp
 
-# ide
-/.idea/
+# IDE
+.idea
