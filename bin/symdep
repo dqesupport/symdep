@@ -65,12 +65,15 @@ if ($autoload === null) {
     exit(1);
 }
 
-// 3. Locate vendor/bin/dep (Deployer 7 PHAR).
+// 3. Locate the Deployer 7 PHAR. Composer's bin-dir is configurable, so
+//    check both the conventional vendor/bin and the project bin/ override.
 $depCandidates = [
+    $deployDir . '/bin/dep',
     $deployDir . '/vendor/bin/dep',
-    __DIR__ . '/../../../bin/dep',
-    __DIR__ . '/../vendor/bin/dep',
     dirname($autoload) . '/bin/dep',
+    $deployDir . '/vendor/deployer/deployer/bin/dep',
+    __DIR__ . '/../vendor/bin/dep',
+    __DIR__ . '/../vendor/deployer/deployer/bin/dep',
 ];
 $dep = null;
 foreach ($depCandidates as $file) {
@@ -97,6 +100,13 @@ putenv('SYMDEP_USER_DEPLOY_FILE=' . $deployFile);
 putenv('SYMDEP_USER_AUTOLOAD=' . $autoload);
 $_ENV['SYMDEP_USER_DEPLOY_FILE'] = $deployFile;
 $_ENV['SYMDEP_USER_AUTOLOAD'] = $autoload;
+
+// Anchor Deployer 7's working directory to the consumer's project root.
+// Without this, ProcessRunner defaults cwd to dirname(DEPLOYER_DEPLOY_FILE),
+// which would be symdep's recipe/ folder — causing run()/runLocally() to
+// execute inside symdep instead of the project. See ProcessRunner::run().
+putenv('DEPLOYER_ROOT=' . $deployDir);
+$_ENV['DEPLOYER_ROOT'] = $deployDir;
 
 // 6. Forward all argv (minus -f / --file, which we override) to dep.
 $forward = [];

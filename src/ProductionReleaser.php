@@ -2,7 +2,7 @@
 
 namespace TheRat\SymDep;
 
-use function Deployer\isVerbose;
+use function Deployer\output;
 use function Deployer\run;
 use function Deployer\runLocally;
 use function Deployer\writeln;
@@ -141,7 +141,7 @@ class ProductionReleaser
                 try {
                     runLocally('{{bin/git}} branch -D '.implode(' ', $forDeleteLocal));
                 } catch (\Exception $e) {
-                    !isVerbose() ?: writeln($e->getMessage());
+                    !output()->isVerbose() ?: writeln($e->getMessage());
                 }
             }
 

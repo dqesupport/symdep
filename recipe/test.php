@@ -146,7 +146,7 @@ task(
             }
         );
         $diff = array_diff($localBranches, $remoteBranches);
-        if (isVerbose()) {
+        if (output()->isVerbose()) {
             writeln(sprintf('<info>Local dir: %s</info>', implode(', ', $localBranches)));
             writeln(sprintf('<info>Remote branches: %s</info>', implode(', ', $remoteBranches)));
             writeln(
@@ -160,7 +160,7 @@ task(
             $full = "$path/$deleteDir";
             if (FileHelper::dirExists($full)) {
                 $cmd = sprintf('rm -rf %s', escapeshellarg($full));
-                if (isVerbose()) {
+                if (output()->isVerbose()) {
                     if (askConfirmation("Do you want delete: $full")) {
                         run($cmd);
                     } else {

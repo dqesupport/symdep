@@ -56,6 +56,9 @@ set('var_dir', 'var');
 set('bin/console', '{{release_path}}/{{bin_dir}}/console');
 set('composer_action', 'install');
 set('console_options', '--no-interaction --env={{symfony_env}}');
+// `assets` is consumed by the project's `deploy:assets` timestamp-touch task.
+// Empty default makes the task a no-op when nothing's configured.
+set('assets', []);
 
 // Environment vars
 set('env', []);

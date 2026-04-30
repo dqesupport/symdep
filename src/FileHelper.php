@@ -2,7 +2,7 @@
 namespace TheRat\SymDep;
 
 use Symfony\Component\Process\Exception\ProcessFailedException;
-use function Deployer\isDebug;
+use function Deployer\output;
 use function Deployer\parse;
 use function Deployer\run;
 use function Deployer\within;
@@ -49,7 +49,7 @@ class FileHelper
         );
 
         if (in_array($srcFilename, $copyOnce) && self::fileExists($dstFilename)) {
-            !isDebug() ?: writeln(sprintf('File "%s" skipped, because is in copyOnce list', $srcFilename));
+            !output()->isDebug() ?: writeln(sprintf('File "%s" skipped, because is in copyOnce list', $srcFilename));
 
             return '';
         }

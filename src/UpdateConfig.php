@@ -2,7 +2,7 @@
 
 namespace TheRat\SymDep;
 
-use function Deployer\isVerbose;
+use function Deployer\output;
 use function Deployer\run;
 use function Deployer\writeln;
 
@@ -52,7 +52,7 @@ class UpdateConfig
 
         if (!FileHelper::dirExists($backupDir)) {
             run('mkdir -p '.$backupDir);
-            !isVerbose() ?: writeln(sprintf('Backup dir "%s" created', $backupDir));
+            !output()->isVerbose() ?: writeln(sprintf('Backup dir "%s" created', $backupDir));
         }
 
         $diff = true;
@@ -69,11 +69,11 @@ class UpdateConfig
         $result = false;
         if ($diff) {
             run(sprintf('cp "%s" "%s"', $srcFilename, $dstFilename));
-            !isVerbose() ?: writeln(run(sprintf('cat %s', $dstFilename)));
-            !isVerbose() ?: writeln(sprintf('File %s updated', $dstFilename));
+            !output()->isVerbose() ?: writeln(run(sprintf('cat %s', $dstFilename)));
+            !output()->isVerbose() ?: writeln(sprintf('File %s updated', $dstFilename));
             $result = true;
         } else {
-            !isVerbose() ?: writeln('File has no diff');
+            !output()->isVerbose() ?: writeln('File has no diff');
             if ($backupFilename) {
                 run('rm '.$backupFilename);
             }
@@ -108,7 +108,7 @@ class UpdateConfig
 
         if (!FileHelper::dirExists($backupDir)) {
             run('mkdir -p '.$backupDir);
-            !isVerbose() ?: writeln(sprintf('Backup dir "%s" created', $backupDir));
+            !output()->isVerbose() ?: writeln(sprintf('Backup dir "%s" created', $backupDir));
         }
 
         $backupFilename = sprintf('%s/crontab.%s', $backupDir, date('Y-m-d_H:i:s'));
@@ -125,11 +125,11 @@ class UpdateConfig
         $result = false;
         if ($diff) {
             run(sprintf('crontab "%s"', $sourceFilename));
-            !isVerbose() ?: writeln(run('crontab -l'));
+            !output()->isVerbose() ?: writeln(run('crontab -l'));
 
             $result = true;
         } else {
-            !isVerbose() ?: writeln('Crontab has no diff');
+            !output()->isVerbose() ?: writeln('Crontab has no diff');
             run('rm '.$backupFilename);
         }
 
