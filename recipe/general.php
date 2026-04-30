@@ -79,6 +79,20 @@ task(
 )->desc('after link');
 
 /**
+ * No-op fallbacks for tasks that existed in Deployer 6's recipe/symfony3.php
+ * but were removed from Deployer 7's recipe/common.php. They remain in the
+ * `deploy` chain so projects can still hook before/after them.
+ */
+task('deploy:create_cache_dir', function () {
+})->desc('Create cache dir (no-op fallback; override per-environment)');
+
+task('deploy:assets', function () {
+})->desc('Copy assets (no-op fallback)');
+
+task('deploy:assetic:dump', function () {
+})->desc('Dump assetic assets (no-op fallback)');
+
+/**
  * Symdep tasks ------------------------------
  */
 task(
@@ -199,7 +213,7 @@ task(
         'link-before',
         'deploy:symlink',
         'deploy:unlock',
-        'cleanup',
+        'deploy:cleanup',
         'link-after',
         'release-info-after',
     ]

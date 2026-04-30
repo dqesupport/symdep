@@ -1,14 +1,12 @@
 <?php
 namespace TheRat\SymDep;
 
-use Deployer\Type\Result;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use function Deployer\isDebug;
 use function Deployer\parse;
 use function Deployer\run;
 use function Deployer\within;
 use function Deployer\writeln;
-use function Deployer\upload;
 
 /**
  * Class FileHelper
@@ -157,7 +155,7 @@ DOCHERE;
     /**
      * @param string $command
      * @param string $workingPath
-     * @return Result
+     * @return string|null
      */
     public static function runWithin($command, $workingPath = null)
     {

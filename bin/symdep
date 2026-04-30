@@ -1,28 +1,31 @@
 #!/usr/bin/env php
 <?php
-/* (c) Anton Medvedev <anton@medv.io>
+/*
+ * symdep — wrapper around Deployer 7's `dep` PHAR.
  *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
+ * Deployer 7 ships its own bin/dep PHAR and is no longer embeddable as a
+ * library (its composer.json has no autoload section). So instead of
+ * constructing a Deployer instance ourselves, we resolve the consumer's
+ * `deploy.php` and `vendor/bin/dep`, then exec `dep` with our recipe
+ * (recipe/symdep.php) as the deploy file. recipe/symdep.php pulls in the
+ * symfony recipes and finally requires the consumer's real deploy.php.
  */
 
-// Deployer constants
-define('DEPLOYER', true);
-define('DEPLOYER_BIN', __FILE__);
+namespace TheRat\SymDep;
 
-// Detect deploy.php script
-$options = getopt('f::', ['file::']);
-$userSpecifiedFile = null;
-
-if (isset($options['f'])) {
-    $userSpecifiedFile = $options['f'];
-} elseif (isset($options['file'])) {
-    $userSpecifiedFile = $options['file'];
+if (!defined('SYMDEP_BIN')) {
+    define('SYMDEP_BIN', __FILE__);
 }
 
-if (empty($userSpecifiedFile)) {
-    $deployFile = getcwd() . '/deploy.php';
+// 1. Resolve the consumer's deploy.php (same lookup as before: -f / --file
+//    or walk up from cwd).
+$cliOptions = getopt('f::', ['file::']);
+$userDeployFile = $cliOptions['f'] ?? $cliOptions['file'] ?? null;
 
+if (!empty($userDeployFile)) {
+    $deployFile = ($userDeployFile[0] === '/' ? '' : getcwd() . '/') . $userDeployFile;
+} else {
+    $deployFile = getcwd() . '/deploy.php';
     if (!is_readable($deployFile)) {
         $currentDir = getcwd();
         $count = 0;
@@ -30,84 +33,93 @@ if (empty($userSpecifiedFile)) {
             $currentDir = dirname($currentDir);
             $deployFile = $currentDir . '/deploy.php';
             $count++;
-        } while (!is_readable($deployFile) && $count < 100);
+        } while (!is_readable($deployFile) && $count < 100 && $currentDir !== '/');
     }
-} else {
-    $deployFile = ($userSpecifiedFile[0] === '/' ? '' : getcwd() . '/') . $userSpecifiedFile;
 }
 
-$deployFilePath = dirname($deployFile);
+if (!is_readable($deployFile)) {
+    fwrite(STDERR, "Cannot find deploy.php (use -f to specify a path)." . PHP_EOL);
+    exit(1);
+}
 
-// Detect source location
+$deployFile = realpath($deployFile);
+$deployDir = dirname($deployFile);
 
-$autoload = [
-    $deployFilePath . '/vendor/autoload.php',
+// 2. Locate the consumer's vendor/autoload.php so symdep's helper classes
+//    (TheRat\SymDep\*) can be autoloaded inside the dep PHAR process.
+$autoloadCandidates = [
+    $deployDir . '/vendor/autoload.php',
     __DIR__ . '/../../../autoload.php',
-    __DIR__ . '/../vendor/autoload.php'
+    __DIR__ . '/../vendor/autoload.php',
 ];
-
-$includes = [
-    $deployFilePath . '/vendor/deployer/deployer',
-    __DIR__ . '/../../../deployer/deployer',
-    __DIR__ . '/../'
-];
-
-$loaded = false;
-
-for ($i = 0; $i < count($autoload); $i++) {
-    if (file_exists($autoload[$i]) && file_exists($includes[$i])) {
-        require $autoload[$i];
-        $loaded = true;
+$autoload = null;
+foreach ($autoloadCandidates as $file) {
+    if (file_exists($file)) {
+        $autoload = realpath($file);
         break;
     }
 }
 
-if (!$loaded) {
-    die(
-        'You need to set up the project dependencies using the following commands:' . PHP_EOL .
-        'wget http://getcomposer.org/composer.phar' . PHP_EOL .
-        'php composer.phar install' . PHP_EOL
-    );
+if ($autoload === null) {
+    fwrite(STDERR, 'Cannot find vendor/autoload.php — run "composer install".' . PHP_EOL);
+    exit(1);
 }
 
-foreach ($includes as $include) {
-    if (strlen(Phar::running()) > 0) {
-        set_include_path(dirname(__DIR__) . '/vendor/deployer/deployer' . PATH_SEPARATOR . get_include_path());
-    } elseif (file_exists($include) && false !== strpos($include, 'deployer/deployer')) {
-        set_include_path($include . PATH_SEPARATOR . get_include_path());
+// 3. Locate vendor/bin/dep (Deployer 7 PHAR).
+$depCandidates = [
+    $deployDir . '/vendor/bin/dep',
+    __DIR__ . '/../../../bin/dep',
+    __DIR__ . '/../vendor/bin/dep',
+    dirname($autoload) . '/bin/dep',
+];
+$dep = null;
+foreach ($depCandidates as $file) {
+    if (file_exists($file)) {
+        $dep = realpath($file);
+        break;
     }
 }
 
-set_include_path(dirname(__DIR__) . PATH_SEPARATOR . get_include_path());
-
-// Include function declarations
-require_once 'src/functions.php';
-
-// Init Deployer
-$console = new \TheRat\SymDep\Console\Application('Symdep', '@package_version@');
-$input = new \Symfony\Component\Console\Input\ArgvInput();
-$output = new \Symfony\Component\Console\Output\ConsoleOutput();
-$deployer = new \Deployer\Deployer($console);
-
-require_once dirname(__DIR__) . '/recipe/symdep.php';
-
-// Pretty-print uncaught exceptions in symfony-console
-set_exception_handler(function ($e) use ($input, $output) {
-    $io = new \Symfony\Component\Console\Style\SymfonyStyle($input, $output);
-    $io->block($e->getMessage(), get_class($e), 'fg=white;bg=red', ' ', true);
-    $io->block($e->getTraceAsString());
+if ($dep === null) {
+    fwrite(STDERR, 'Cannot find Deployer "dep" binary in vendor/bin/dep.' . PHP_EOL);
     exit(1);
-});
-
-// Require deploy.php file
-if (is_readable($deployFile)) {
-    // Prevent variable leak into deploy.php file
-    call_user_func(function () use ($deployFile) {
-        \Deployer\set('deploy_file', $deployFile);
-        require $deployFile;
-    });
 }
 
-// Run Deployer
-$deployer->init();
-$console->run();
+// 4. The recipe entry point we feed to dep.
+$symdepRecipe = realpath(__DIR__ . '/../recipe/symdep.php');
+if ($symdepRecipe === false || !is_readable($symdepRecipe)) {
+    fwrite(STDERR, 'Cannot locate recipe/symdep.php.' . PHP_EOL);
+    exit(1);
+}
+
+// 5. Pass deploy file + autoload path to the recipe via environment.
+putenv('SYMDEP_USER_DEPLOY_FILE=' . $deployFile);
+putenv('SYMDEP_USER_AUTOLOAD=' . $autoload);
+$_ENV['SYMDEP_USER_DEPLOY_FILE'] = $deployFile;
+$_ENV['SYMDEP_USER_AUTOLOAD'] = $autoload;
+
+// 6. Forward all argv (minus -f / --file, which we override) to dep.
+$forward = [];
+$skipNext = false;
+foreach (array_slice($_SERVER['argv'], 1) as $arg) {
+    if ($skipNext) {
+        $skipNext = false;
+        continue;
+    }
+    if ($arg === '-f' || $arg === '--file') {
+        $skipNext = true;
+        continue;
+    }
+    if (str_starts_with($arg, '-f=') || str_starts_with($arg, '--file=')) {
+        continue;
+    }
+    $forward[] = $arg;
+}
+
+$cmd = escapeshellarg($dep) . ' -f ' . escapeshellarg($symdepRecipe);
+foreach ($forward as $arg) {
+    $cmd .= ' ' . escapeshellarg($arg);
+}
+
+passthru($cmd, $code);
+exit($code);

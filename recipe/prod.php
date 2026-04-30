@@ -25,7 +25,7 @@ task('create_release_branch', function () {
         set('branch', $branch);
         input()->setOption('branch', $branch);
     }
-})->local();
+})->once();
 
 task(
     'properties',
@@ -76,5 +76,5 @@ task(
             writeln($e->getMessage());
         }
     }
-)->local();
+)->once();
 after('release-info-after', 'cleanup:release-branches');

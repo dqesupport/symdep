@@ -1,9 +1,10 @@
 <?php
 namespace TheRat\SymDep\Tests\Release;
 
+use PHPUnit\Framework\TestCase;
 use TheRat\SymDep\ReleaseInfo\LogParser;
 
-class LogParserTest extends \PHPUnit_Framework_TestCase
+class LogParserTest extends TestCase
 {
     /**
      * @param $log

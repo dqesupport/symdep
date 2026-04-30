@@ -2,21 +2,17 @@
     "name": "therat/symdep",
     "description": "Additional tool for symfony deploy",
     "require": {
-        "php": ">=7.1 || ^8.0",
-        "deployer/deployer": "^6.9.0",
-        "deployer/phar-update": "^2.0",
-        "symfony/console": "^3.4 || ^4.0 || ^5",
-        "symfony/finder": "^3.4 || ^4.0 || ^5",
-        "symfony/process": "^3.4 || ^4.0 || ^5",
-        "symfony/yaml": "^3.4 || ^4.0 || ^5"
+        "php": ">=8.0",
+        "deployer/deployer": "^7.5",
+        "symfony/console": "^5.4 || ^6.0 || ^7.0",
+        "symfony/finder": "^5.4 || ^6.0 || ^7.0",
+        "symfony/process": "^5.4 || ^6.0 || ^7.0",
+        "symfony/yaml": "^5.4 || ^6.0 || ^7.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5"
     },
     "minimum-stability": "stable",
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "git@github.com:dqesupport/deployer.git"
-        }
-    ],
     "license": "MIT",
     "authors": [
         {
@@ -26,12 +22,17 @@
     ],
     "extra": {
         "branch-alias": {
-            "dev-master": "6.1.x-dev"
+            "dev-master": "7.0.x-dev"
         }
     },
     "autoload": {
         "psr-4": {
             "TheRat\\SymDep\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "TheRat\\SymDep\\Tests\\": "src/Tests/"
         }
     },
     "bin": [

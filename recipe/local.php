@@ -36,6 +36,9 @@ task(
     }
 );
 
+// Deployer 7's recipe/common.php defines deploy:prepare as a GroupTask;
+// replace it with a single shared-dir creation task for local builds.
+Deployer::get()->tasks->remove('deploy:prepare');
 task(
     'deploy:prepare',
     function () {
@@ -91,7 +94,7 @@ task(
     }
 );
 task(
-    'cleanup',
+    'deploy:cleanup',
     function () {
     }
 );

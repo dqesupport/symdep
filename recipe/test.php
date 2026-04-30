@@ -55,6 +55,9 @@ task(
     }
 );
 
+// Deployer 7 ships deploy:prepare as a GroupTask in recipe/common.php; we
+// replace it with a plain task here to do the POSIX shell sanity check.
+Deployer::get()->tasks->remove('deploy:prepare');
 task('deploy:prepare', function () {
     // Check if shell is POSIX-compliant
     try {
@@ -67,7 +70,7 @@ task('deploy:prepare', function () {
             );
         }
     } catch (\RuntimeException $e) {
-        $formatter = Deployer::get()->getHelper('formatter');
+        $formatter = new \Symfony\Component\Console\Helper\FormatterHelper();
 
         $errorMessage = [
             "Shell on your server is not POSIX-compliant. Please change to sh, bash or similar.",
